@@ -9,14 +9,18 @@
         <h3>Grade Table for Assignment {{ assign.assigName }} (due at {{ assign.dueDate }})</h3>
         <table>
             <tr>
-                <th>NetID</th><th>Submission DateTime</th><th>Late Days Used</th><th>Score</th>
+                <th>NetID</th><th>Submission DateTime</th><th>Late Days Used</th>
+                <th>Grade Notes</th><th>Deduction</th><th>Score</th>
             </tr>
             {% for turnin in turnins %}
                 <tr>
                     <td>{{ turnin.netID_id }}</td>
                     <td>{{ turnin.submitDateTime }}</td>
                     <td>{{ turnin.latedays }}</td>
+                    <td>{{ turnin.gradeNotes }}</td>
+                    <td>{{ turnin.deduction }}</td>
                     <td>{{ turnin.score }}</td>
+                    <td><a href="{% url 'grading:grade' assign.assigName turnin.netID_id %}">Grade/Regrade</a></td>
                 </tr>
             {% endfor %}
         </table>

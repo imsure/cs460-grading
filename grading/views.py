@@ -4,7 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 
 from grading.models import Student, Assignment, Grade
-from grading.forms import AssignmentForm
+from grading.forms import AssignmentForm, GradeForm
 
 import csv
 import datetime
@@ -72,7 +72,7 @@ def init_grade_table(request, assign_name):
             dt = datetime.datetime(year, month, day, hour, minute)
             s = Grade.objects.create(netID_id=netID, submitDateTime=dt,
                                      assigName_id=assign_name,
-                                     deduction='', score=-1)
+                                     deduction=-1, score=-1)
             counter = counter + 1
 
     return HttpResponse('{} submission inserted into grade Table for {}.'.
@@ -100,7 +100,7 @@ def show_grade(request, assign_name):
             turnins[i].latedays = latedays
             turnins[i].save()
 
-        if turnins[i].score == -1:
+        if turnins[i].deduction == -1:
             num_ungraded += 1
 
     context = {
@@ -111,3 +111,16 @@ def show_grade(request, assign_name):
     }
 
     return render(request, 'grading/show_grade.html', context)
+
+def grade(request, assign_name, netID):
+    if request.method == 'POST':
+        form = GradeForm(request.POST)
+        grade_entry = Grade.objects.get(netID=netID, assigName=assign_name)
+        form.instance = grade_entry
+        if form.is_valid():
+            form.save()
+        return HttpResponseRedirect(reverse('grading:show_grade', args=(assign_name,)))
+    else:
+        form = GradeForm()
+    return render(request, 'grading/grade.html', {'form': form})
+    #return HttpResponse('test')

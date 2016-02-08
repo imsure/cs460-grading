@@ -24,11 +24,12 @@ class Grade(models.Model):
     submitDateTime = models.DateTimeField()
     netID = models.ForeignKey(Student)
     assigName = models.ForeignKey(Assignment)
-    deduction = models.TextField()
+    gradeNotes = models.TextField(blank=True, null=True)
     # -1 indicates late days has not been computed
     latedays = models.IntegerField(default=-1)
     # -1 indicates score has not avaiable
     score = models.IntegerField(default=-1)
+    deduction = models.IntegerField(default=-1)
 
     class Meta:
         db_table = 'grade'
