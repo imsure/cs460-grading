@@ -1,0 +1,10 @@
+# Backup files
+*~
+
+.DS_Store
+
+.ropeproject
+
+*.egg-info
+*.py[co]
+__pycache__

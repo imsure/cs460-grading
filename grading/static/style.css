@@ -1,0 +1,20 @@
+h1 {
+    color: blue
+}
+h2, h3 {
+    color: #FF0000
+}
+
+table, th, td {
+    border: 1px solid #ccc;
+    border-collapse: collapse;
+    height: 2em;
+}
+th, td {
+    padding: 5px;
+    text-align: left;
+}
+th {
+    background: lightblue;
+    border-color: white;
+}

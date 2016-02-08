@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        {% load staticfiles %}
+        <link rel="stylesheet" type="text/css" href="{% static "style.css" %}" media="screen" />
+    </head>
+
+    <body>
+        <h3>Grade Table for Assignment {{ assign.assigName }} (due at {{ assign.dueDate }})</h3>
+        <table>
+            <tr>
+                <th>NetID</th><th>Submission DateTime</th><th>Late Days Used</th><th>Score</th>
+            </tr>
+            {% for turnin in turnins %}
+                <tr>
+                    <td>{{ turnin.netID_id }}</td>
+                    <td>{{ turnin.submitDateTime }}</td>
+                    <td>{{ turnin.latedays }}</td>
+                    <td>{{ turnin.score }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+        <br>
+        <h4>Total submissions: {{ num_turnins }}</h4>
+        <h4>Number of ungraded submissions: {{ num_ungraded }}</h4>
+    </body>
+</html>
+

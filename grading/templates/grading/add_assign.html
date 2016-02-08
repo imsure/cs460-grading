@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        {% load staticfiles %}
+        <link rel="stylesheet" type="text/css" href="{% static "style.css" %}" media="screen" />
+    </head>
+
+    <body>
+        <h3>Assignments</h3>
+        <form method="POST">{% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Save</button>
+        </form>
+    </body>
+</html>
+

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        {% load staticfiles %}
+        <link rel="stylesheet" type="text/css" href="{% static "style.css" %}" media="screen" />
+    </head>
+
+    <body>
+        <a href="{% url 'grading:init_student' %}">Initialize Student Table</a>
+        <br><br>
+        <h3>Assignments</h3>
+        <table>
+            <tr>
+                <th>Assignment Name</th><th>Due Date</th><th>Total Score</th>
+            </tr>
+            {% for assig in assignments %}
+                <tr>
+                    <td><a href="{% url 'grading:show_grade' assig.assigName %}">{{ assig.assigName }}</a></td>
+                    <td>{{ assig.dueDate }}</td>
+                    <td>{{ assig.total }}</td>
+                    <td><a href="{% url 'grading:init_grade_table' assig.assigName %}">Initialize Grading Table</a></td>
+                </tr>
+            {% endfor %}
+        </table>
+
+        <br><a href="{% url 'grading:add_assign' %}">Add a new assignment</a>
+    </body>
+</html>
+
