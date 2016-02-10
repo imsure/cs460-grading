@@ -17,17 +17,22 @@
                     <td>{{ turnin.netID_id }}</td>
                     <td>{{ turnin.submitDateTime }}</td>
                     <td>{{ turnin.latedays }}</td>
-                    <td><a href="">Details</a></td>
+                    <td><a href="{% url 'grading:deduction_details' assign.assigName turnin.netID_id %}">Details</a></td>
                     <td>{{ turnin.deduction }}</td>
                     <td>{{ turnin.score }}</td>
                     <td>{{ turnin.emailSent }}</td>
                     <td><a href="{% url 'grading:grade' assign.assigName turnin.netID_id %}">Grade/Regrade</a></td>
+                    {% if turnin.emailSent %}
+                        <td><a href="{% url 'grading:send_email' assign.assigName turnin.netID_id %}">Re send Email</a></td>
+                    {% else %}
+                        <td><a href="{% url 'grading:send_email' assign.assigName turnin.netID_id %}">Send Email</a></td>
+                    {% endif %}
                 </tr>
             {% endfor %}
         </table>
         <br>
         <a href="{% url 'grading:compute_grades' assign.assigName %}">Compute Grades</a><br>
-        <a href="{% url 'grading:send_email' assign.assigName %}">Send Email</a>
+        <a href="{% url 'grading:send_email_all' assign.assigName %}">Send Email to ALL</a>
         <br>
         <h4>Total submissions: {{ num_turnins }}</h4>
         <h4>Number of ungraded submissions: {{ num_ungraded }}</h4>

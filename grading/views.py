@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, HttpResponseRedirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
+from django.db import IntegrityError
 
 from grading.models import Student, Assignment, Grade
 from grading.forms import AssignmentForm, GradeForm
@@ -14,8 +15,8 @@ import sys
 import math
 from email.mime.text import MIMEText
 
-path2roster_file = '/Users/shuoyang/codebase/cs460site/grading/static/roster_test.csv'
-path2turnin_file = '/Users/shuoyang/codebase/cs460site/grading/static/cs460p1_turnin_test.txt'
+path2roster_file = '/Users/shuoyang/codebase/cs460site/grading/static/roster.csv'
+path2turnin_file = '/Users/shuoyang/codebase/cs460site/grading/static/cs460p1_turnin.txt'
 
 # Create your views here.
 
@@ -55,6 +56,14 @@ def add_assign(request):
     else:
         form = AssignmentForm()
     return render(request, 'grading/add_assign.html', {'form': form})
+
+def remove_assign(request, assign_name):
+    assign = Assignment.objects.get(pk=assign_name)
+    try:
+        assign.delete()
+        return HttpResponseRedirect(reverse('grading:index'))
+    except IntegrityError as e:
+        return HttpResponse(str(e))
 
 def init_grade_table(request, assign_name):
     month_map = {'Jan': 1, 'Feb': 2}
@@ -130,6 +139,10 @@ def grade(request, assign_name, netID):
         form = GradeForm()
     return render(request, 'grading/grade.html', {'form': form})
 
+def deduction_details(request, assign_name, netID):
+    grade_entry = Grade.objects.get(netID=netID, assigName=assign_name)
+    return HttpResponse(grade_entry.gradeNotes)
+
 def compute_grades(request, assign_name):
     turnins = Grade.objects.filter(assigName=assign_name)
     assign = Assignment.objects.get(pk=assign_name)
@@ -147,7 +160,7 @@ def compute_grades(request, assign_name):
 
     return HttpResponseRedirect(reverse('grading:show_grade', args=(assign_name,)))
 
-def send_email(request, assign_name):
+def send_email_all(request, assign_name):
     sender = 'shuoyang@email.arizona.edu'
     conn = smtplib.SMTP('smtpgate.email.arizona.edu', 587)
     conn.ehlo()
@@ -157,8 +170,8 @@ def send_email(request, assign_name):
     turnins = Grade.objects.filter(assigName=assign_name)
     for i in range(0, len(turnins)):
         # this means this submission has been graded but email not sent yet
-        #if turnins[i].deduction >= 0 and turnins[i].emailSent == False:
-        if turnins[i].deduction >= 0:
+        if turnins[i].deduction >= 0 and turnins[i].emailSent == False:
+        #if turnins[i].deduction >= 0:
             s = Student.objects.get(pk=turnins[i].netID_id)
             remaining_latedays = 5 - turnins[i].latedays
             num_lateday_penalty = 0
@@ -202,4 +215,57 @@ Shuo
             turnins[i].save()
 
     return HttpResponseRedirect(reverse('grading:show_grade', args=(assign_name,)))
-    #return HttpResponse('test')
+
+def send_email(request, assign_name, netID):
+    sender = 'shuoyang@email.arizona.edu'
+    conn = smtplib.SMTP('smtpgate.email.arizona.edu', 587)
+    conn.ehlo()
+    conn.starttls()
+    conn.login(sender, email_password)
+
+    turnin_entry = Grade.objects.get(assigName=assign_name, netID=netID)
+    if turnin_entry.deduction >= 0:
+        s = Student.objects.get(pk=turnin_entry.netID_id)
+        remaining_latedays = 5 - turnin_entry.latedays
+        num_lateday_penalty = 0
+        if remaining_latedays < 0:
+            num_lateday_penalty = -remaining_latedays
+            remaining_latedays = 0
+
+        email_body = '''
+Hi {0},
+
+Your final score is {1}. Please see details below.
+
+---------------------------------------------------
+Late days used for this assignment: {2}
+Late days remaining: {3}
+
+Deductions:
+{4}
+
+Raw score: {5}
+Late day penalty: {6} * 20% = {7}
+
+Final score: {8} * (1 - {9}) = {10}
+---------------------------------------------------
+
+Please let me know if you have any questions or concerns.
+
+Shuo
+        '''.format(s.fname, turnin_entry.score, turnin_entry.latedays,
+                   remaining_latedays, turnin_entry.gradeNotes,
+                   100-turnin_entry.deduction, num_lateday_penalty,
+                   num_lateday_penalty * 0.2, 100-turnin_entry.deduction,
+                   num_lateday_penalty * 0.2, turnin_entry.score)
+        msg = MIMEText(email_body, 'plain')
+        msg['Subject'] = 'CS460: {} Grade'.format(assign_name)
+        msg['From'] = sender
+        msg['To'] = turnin_entry.netID_id + '@email.arizona.edu'
+        msg['CC'] = sender # CC myself
+        conn.send_message(msg)
+        if turnin_entry.emailSent == False:
+            turnin_entry.emailSent = True
+            turnin_entry.save()
+
+    return HttpResponseRedirect(reverse('grading:show_grade', args=(assign_name,)))
