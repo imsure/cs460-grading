@@ -9,4 +9,6 @@ urlpatterns = patterns(
     url(r'^init_grade_table/(?P<assign_name>\w+)/$', views.init_grade_table, name='init_grade_table'),
     url(r'^show_grade/(?P<assign_name>\w+)/$', views.show_grade, name='show_grade'),
     url(r'^grade/(?P<assign_name>\w+)/(?P<netID>\w+)/$', views.grade, name='grade'),
+    url(r'^send_email/(?P<assign_name>\w+)/$', views.send_email, name='send_email'),
+    url(r'^compute_grades/(?P<assign_name>\w+)/$', views.compute_grades, name='compute_grades'),
 )

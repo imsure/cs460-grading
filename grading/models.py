@@ -30,6 +30,7 @@ class Grade(models.Model):
     # -1 indicates score has not avaiable
     score = models.IntegerField(default=-1)
     deduction = models.IntegerField(default=-1)
+    emailSent = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'grade'

@@ -5,9 +5,14 @@ from django.core.urlresolvers import reverse
 
 from grading.models import Student, Assignment, Grade
 from grading.forms import AssignmentForm, GradeForm
+from grading.config import email_password
 
 import csv
 import datetime
+import smtplib
+import sys
+import math
+from email.mime.text import MIMEText
 
 path2roster_file = '/Users/shuoyang/codebase/cs460site/grading/static/roster_test.csv'
 path2turnin_file = '/Users/shuoyang/codebase/cs460site/grading/static/cs460p1_turnin_test.txt'
@@ -72,7 +77,8 @@ def init_grade_table(request, assign_name):
             dt = datetime.datetime(year, month, day, hour, minute)
             s = Grade.objects.create(netID_id=netID, submitDateTime=dt,
                                      assigName_id=assign_name,
-                                     deduction=-1, score=-1)
+                                     deduction=-1, score=-1,
+                                     emailSent=False)
             counter = counter + 1
 
     return HttpResponse('{} submission inserted into grade Table for {}.'.
@@ -123,4 +129,77 @@ def grade(request, assign_name, netID):
     else:
         form = GradeForm()
     return render(request, 'grading/grade.html', {'form': form})
+
+def compute_grades(request, assign_name):
+    turnins = Grade.objects.filter(assigName=assign_name)
+    assign = Assignment.objects.get(pk=assign_name)
+    for i in range(0, len(turnins)):
+        remaining_latedays = 5 - turnins[i].latedays
+        if remaining_latedays >= 0:
+            turnins[i].score = assign.total - turnins[i].deduction
+            turnins[i].save()
+        else:
+            num_lateday_penalty = -remaining_latedays
+            raw_score = assign.total - turnins[i].deduction
+            turnins[i].score = math.ceil(raw_score * (1 - 0.2 * num_lateday_penalty))
+            turnins[i].save()
+            #HttpResponse('Negative remaining late days!')
+
+    return HttpResponseRedirect(reverse('grading:show_grade', args=(assign_name,)))
+
+def send_email(request, assign_name):
+    sender = 'shuoyang@email.arizona.edu'
+    conn = smtplib.SMTP('smtpgate.email.arizona.edu', 587)
+    conn.ehlo()
+    conn.starttls()
+    conn.login(sender, email_password)
+
+    turnins = Grade.objects.filter(assigName=assign_name)
+    for i in range(0, len(turnins)):
+        # this means this submission has been graded but email not sent yet
+        #if turnins[i].deduction >= 0 and turnins[i].emailSent == False:
+        if turnins[i].deduction >= 0:
+            s = Student.objects.get(pk=turnins[i].netID_id)
+            remaining_latedays = 5 - turnins[i].latedays
+            num_lateday_penalty = 0
+            if remaining_latedays < 0:
+                num_lateday_penalty = -remaining_latedays
+                remaining_latedays = 0
+
+            email_body = '''
+Hi {0},
+
+Your final score is {1}. Please see details below.
+
+---------------------------------------------------
+Late days used for this assignment: {2}
+Late days remaining: {3}
+
+Deductions:
+{4}
+
+Raw score: {5}
+Late day penalty: {6} * 20% = {7}
+
+Final score: {8} * (1 - {9}) = {10}
+---------------------------------------------------
+
+Please let me know if you have any questions or concerns.
+
+Shuo
+            '''.format(s.fname, turnins[i].score, turnins[i].latedays,
+                       remaining_latedays, turnins[i].gradeNotes,
+                       100-turnins[i].deduction, num_lateday_penalty,
+                       num_lateday_penalty * 0.2, 100-turnins[i].deduction,
+                       num_lateday_penalty * 0.2, turnins[i].score)
+            msg = MIMEText(email_body, 'plain')
+            msg['Subject'] = 'CS460: {} Grade'.format(assign_name)
+            msg['From'] = sender
+            msg['To'] = turnins[i].netID_id + '@email.arizona.edu'
+            msg['CC'] = sender # CC myself
+            conn.send_message(msg)
+            turnins[i].emailSent = True
+            turnins[i].save()
+
+    return HttpResponseRedirect(reverse('grading:show_grade', args=(assign_name,)))
     #return HttpResponse('test')

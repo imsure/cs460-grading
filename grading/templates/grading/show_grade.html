@@ -10,20 +10,24 @@
         <table>
             <tr>
                 <th>NetID</th><th>Submission DateTime</th><th>Late Days Used</th>
-                <th>Grade Notes</th><th>Deduction</th><th>Score</th>
+                <th>Grade Notes</th><th>Deduction</th><th>Score</th><th>Email Sent out?</th>
             </tr>
             {% for turnin in turnins %}
                 <tr>
                     <td>{{ turnin.netID_id }}</td>
                     <td>{{ turnin.submitDateTime }}</td>
                     <td>{{ turnin.latedays }}</td>
-                    <td>{{ turnin.gradeNotes }}</td>
+                    <td><a href="">Details</a></td>
                     <td>{{ turnin.deduction }}</td>
                     <td>{{ turnin.score }}</td>
+                    <td>{{ turnin.emailSent }}</td>
                     <td><a href="{% url 'grading:grade' assign.assigName turnin.netID_id %}">Grade/Regrade</a></td>
                 </tr>
             {% endfor %}
         </table>
+        <br>
+        <a href="{% url 'grading:compute_grades' assign.assigName %}">Compute Grades</a><br>
+        <a href="{% url 'grading:send_email' assign.assigName %}">Send Email</a>
         <br>
         <h4>Total submissions: {{ num_turnins }}</h4>
         <h4>Number of ungraded submissions: {{ num_ungraded }}</h4>
