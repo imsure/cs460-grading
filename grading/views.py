@@ -13,6 +13,7 @@ import datetime
 import smtplib
 import sys
 import math
+import csv
 from email.mime.text import MIMEText
 
 path2roster_file = '/Users/shuoyang/codebase/cs460site/grading/static/roster.csv'
@@ -269,3 +270,19 @@ Shuo
             turnin_entry.save()
 
     return HttpResponseRedirect(reverse('grading:show_grade', args=(assign_name,)))
+
+def output2csv(request, assign_name):
+    grade_entries = Grade.objects.filter(assigName=assign_name)
+    fields = Grade._meta.get_fields()
+    header_row = [field.name for field in fields]
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="{}.csv"'.format(assign_name)
+
+    writer = csv.writer(response)
+    writer.writerow(header_row)
+
+    for entry in grade_entries:
+        writer.writerow([getattr(entry, field.name) for field in fields])
+
+    return response

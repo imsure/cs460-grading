@@ -32,7 +32,8 @@
         </table>
         <br>
         <a href="{% url 'grading:compute_grades' assign.assigName %}">Compute Grades</a><br>
-        <a href="{% url 'grading:send_email_all' assign.assigName %}">Send Email to ALL</a>
+        <a href="{% url 'grading:send_email_all' assign.assigName %}">Send Email to ALL</a><br>
+        <a href="{% url 'grading:output2csv' assign.assigName %}">Output to CSV</a><br>
         <br>
         <h4>Total submissions: {{ num_turnins }}</h4>
         <h4>Number of ungraded submissions: {{ num_ungraded }}</h4>

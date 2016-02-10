@@ -14,4 +14,5 @@ urlpatterns = patterns(
     url(r'^compute_grades/(?P<assign_name>\w+)/$', views.compute_grades, name='compute_grades'),
     url(r'^deduction_details/(?P<assign_name>\w+)/(?P<netID>\w+)/$', views.deduction_details, name='deduction_details'),
     url(r'^send_email/(?P<assign_name>\w+)/(?P<netID>\w+)/$', views.send_email, name='send_email'),
+    url(r'^output2csv/(?P<assign_name>\w+)/$', views.output2csv, name='output2csv'),
 )
