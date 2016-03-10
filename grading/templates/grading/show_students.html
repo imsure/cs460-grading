@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        {% load staticfiles %}
+        <link rel="stylesheet" type="text/css" href="{% static "style.css" %}" media="screen" />
+    </head>
+
+    <body>
+        <h3>Student Table</h3>
+        <table>
+            <tr>
+                <th>index</th><th>NetID</th><th>First Name</th><th>Last Name</th>
+                <th>Prog1 Latedays</th><th>Prog1 Score</th>
+                <th>Prog2 Latedays</th><th>Prog2 Score</th>
+                <th>HW1 Latedays</th><th>HW1 Score</th>
+                <th>Late days remaining</th>
+            </tr>
+            {% for s,lp1,p1,lp2,p2,lh1,h1,ldr in students %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ s.netID }}</td>
+                    <td>{{ s.fname }}</td>
+                    <td>{{ s.lname }}</td>
+                    <td>{{ lp1 }}</td>
+                    <td>{{ p1 }}</td>
+                    <td>{{ lp2 }}</td>
+                    <td>{{ p2 }}</td>
+                    <td>{{ lh1 }}</td>
+                    <td>{{ h1 }}</td>
+                    <td>{{ ldr }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </body>
+</html>
+

@@ -17,15 +17,17 @@ import csv
 from email.mime.text import MIMEText
 
 path2roster_file = '/Users/shuoyang/codebase/cs460site/grading/static/roster.csv'
-path2turnin_file = '/Users/shuoyang/codebase/cs460site/grading/static/cs460p1_turnin.txt'
+path2turnin_file = '/Users/shuoyang/codebase/cs460site/grading/static/{}_turnin.txt'
 
 # Create your views here.
 
+# home page
 def index(request):
     assignments = Assignment.objects.all()
     context = {'assignments': assignments}
     return render(request, 'grading/index.html', context)
 
+# initialize student table
 def init_student(request):
     roster_file = open(path2roster_file)
     roster_csv = csv.reader(roster_file, delimiter=',')
@@ -48,6 +50,53 @@ def init_student(request):
 
     return HttpResponse('{} students inserted into Student Table!'.format(counter))
 
+def get_student_score_ldays(netID, assign_name):
+    try:
+        grade_entry = Grade.objects.get(netID=netID, assigName=assign_name)
+        return (grade_entry.score, grade_entry.latedays)
+    except ObjectDoesNotExist:
+        return (-1, 0)
+
+# show student table with the derived data:
+# such as remaining late days, assigname score.
+def show_students(request):
+    students = Student.objects.all()
+    ldays_remaining = []
+    prog1_score = []
+    prog1_ldays = []
+    prog2_score = []
+    prog2_ldays = []
+    hw1_score = []
+    hw1_ldays = []
+    for s in students:
+        (score_p1, ldays_p1) = get_student_score_ldays(s.netID, 'Prog1')
+        prog1_score.append(score_p1)
+        prog1_ldays.append(ldays_p1)
+        (score_p2, ldays_p2) = get_student_score_ldays(s.netID, 'Prog2')
+        prog2_score.append(score_p2)
+        prog2_ldays.append(ldays_p2)
+        (score_h1, ldays_h1) = get_student_score_ldays(s.netID, 'HW1')
+        hw1_score.append(score_h1)
+        hw1_ldays.append(ldays_h1)
+        # remaining_latedays = compute_remaining_ldays('Prog1', s.netID)
+        # remaining_latedays = compute_remaining_ldays('Prog2', s.netID)
+        remaining_latedays = compute_remaining_ldays('HW1', s.netID)
+        if remaining_latedays < 0:
+            ldays_remaining.append(0)
+        else:
+            ldays_remaining.append(remaining_latedays)
+
+    context = {
+        'students': list(zip(students,
+                             prog1_ldays, prog1_score,
+                             prog2_ldays, prog2_score,
+                             hw1_ldays, hw1_score,
+                             ldays_remaining)),
+    }
+    return render(request, 'grading/show_students.html', context)
+    #return HttpResponse('test')
+
+# add an assignment to Assignment table
 def add_assign(request):
     if request.method == 'POST':
         form = AssignmentForm(request.POST)
@@ -58,6 +107,7 @@ def add_assign(request):
         form = AssignmentForm()
     return render(request, 'grading/add_assign.html', {'form': form})
 
+# don't do this! Dangerous!
 def remove_assign(request, assign_name):
     assign = Assignment.objects.get(pk=assign_name)
     try:
@@ -66,11 +116,12 @@ def remove_assign(request, assign_name):
     except IntegrityError as e:
         return HttpResponse(str(e))
 
+# initialize grading table for an assignment
 def init_grade_table(request, assign_name):
     month_map = {'Jan': 1, 'Feb': 2}
 
     counter = 0
-    turnin = open(path2turnin_file)
+    turnin = open(path2turnin_file.format(assign_name))
     for line in turnin.readlines():
         fields = line.split()
         year = 2016
@@ -144,16 +195,61 @@ def deduction_details(request, assign_name, netID):
     grade_entry = Grade.objects.get(netID=netID, assigName=assign_name)
     return HttpResponse(grade_entry.gradeNotes)
 
+def compute_remaining_ldays(assign_name, netID):
+    remaining_ldays = 0
+    if assign_name == 'Prog1':
+        try:
+            prog1_entry = Grade.objects.get(assigName='Prog1', netID=netID)
+            remaining_ldays = 5 - prog1_entry.latedays
+        except ObjectDoesNotExist:
+            remaining_ldays = 5
+
+    if assign_name == 'Prog2':
+        try:
+            prog1_entry = Grade.objects.get(assigName='Prog1', netID=netID)
+            remaining_ldays = 5 - prog1_entry.latedays
+        except ObjectDoesNotExist:
+            remaining_ldays = 5
+
+        try:
+            prog2_entry = Grade.objects.get(assigName='Prog2', netID=netID)
+            remaining_ldays -= prog2_entry.latedays
+        except ObjectDoesNotExist:
+            pass
+
+    if assign_name == 'HW1':
+        try:
+            prog1_entry = Grade.objects.get(assigName='Prog1', netID=netID)
+            remaining_ldays = 5 - prog1_entry.latedays
+        except ObjectDoesNotExist:
+            remaining_ldays = 5
+
+        try:
+            prog2_entry = Grade.objects.get(assigName='Prog2', netID=netID)
+            remaining_ldays -= prog2_entry.latedays
+        except ObjectDoesNotExist:
+            pass
+
+        try:
+            hw1_entry = Grade.objects.get(assigName='HW1', netID=netID)
+            remaining_ldays -= hw1_entry.latedays
+        except ObjectDoesNotExist:
+            pass
+
+    return remaining_ldays
+
 def compute_grades(request, assign_name):
     turnins = Grade.objects.filter(assigName=assign_name)
     assign = Assignment.objects.get(pk=assign_name)
     for i in range(0, len(turnins)):
-        remaining_latedays = 5 - turnins[i].latedays
-        if remaining_latedays >= 0:
+        remaining_latedays = compute_remaining_ldays(assign_name, turnins[i].netID_id)
+        if remaining_latedays >= 0 or turnins[i].latedays == 0: # no penalty
             turnins[i].score = assign.total - turnins[i].deduction
             turnins[i].save()
-        else:
-            num_lateday_penalty = -remaining_latedays
+        else: # got late day penalty only when at least 1 late day is used and remaining late days is negative
+            # number of late days with penalty should be the min of late days used
+            # for the assignment and absolute value of remaining latedays.
+            num_lateday_penalty = min(turnins[i].latedays, -remaining_latedays)
             raw_score = assign.total - turnins[i].deduction
             turnins[i].score = math.ceil(raw_score * (1 - 0.2 * num_lateday_penalty))
             turnins[i].save()
@@ -174,10 +270,16 @@ def send_email_all(request, assign_name):
         if turnins[i].deduction >= 0 and turnins[i].emailSent == False:
         #if turnins[i].deduction >= 0:
             s = Student.objects.get(pk=turnins[i].netID_id)
-            remaining_latedays = 5 - turnins[i].latedays
-            num_lateday_penalty = 0
+            remaining_latedays = compute_remaining_ldays(assign_name, turnins[i].netID_id)
+            # remaining_latedays = 5 - turnins[i].latedays
+            if remaining_latedays >= 0 or turnins[i].latedays == 0: # no penalty
+                num_lateday_penalty = 0
+            else:
+                num_lateday_penalty = min(turnins[i].latedays, -remaining_latedays)
+            # num_lateday_penalty = 0
+
             if remaining_latedays < 0:
-                num_lateday_penalty = -remaining_latedays
+                # num_lateday_penalty = -remaining_latedays
                 remaining_latedays = 0
 
             email_body = '''
@@ -227,10 +329,17 @@ def send_email(request, assign_name, netID):
     turnin_entry = Grade.objects.get(assigName=assign_name, netID=netID)
     if turnin_entry.deduction >= 0:
         s = Student.objects.get(pk=turnin_entry.netID_id)
-        remaining_latedays = 5 - turnin_entry.latedays
-        num_lateday_penalty = 0
+
+        remaining_latedays = compute_remaining_ldays(assign_name, turnin_entry.netID_id)
+        # remaining_latedays = 5 - turnins[i].latedays
+        if remaining_latedays >= 0 or turnin_entry.latedays == 0: # no penalty
+            num_lateday_penalty = 0
+        else:
+            num_lateday_penalty = min(turnin_entry.latedays, -remaining_latedays)
+            # num_lateday_penalty = 0
+
         if remaining_latedays < 0:
-            num_lateday_penalty = -remaining_latedays
+            # num_lateday_penalty = -remaining_latedays
             remaining_latedays = 0
 
         email_body = '''
