@@ -13,9 +13,13 @@
                 <th>Prog1 Latedays</th><th>Prog1 Score</th>
                 <th>Prog2 Latedays</th><th>Prog2 Score</th>
                 <th>HW1 Latedays</th><th>HW1 Score</th>
+                <th>HW2 Latedays</th><th>HW2 Score</th>
+                <th>HW3 Latedays</th><th>HW3 Score</th>
+                <th>Prog3 Latedays</th><th>Prog3 Score</th>
+                <th>HW4 Latedays</th><th>HW4 Score</th>
                 <th>Late days remaining</th>
             </tr>
-            {% for s,lp1,p1,lp2,p2,lh1,h1,ldr in students %}
+            {% for s,lp1,p1,lp2,p2,lh1,h1,lh2,h2,lh3,h3,lp3,p3,lh4,h4,ldr in students %}
                 <tr>
                     <td>{{ forloop.counter }}</td>
                     <td>{{ s.netID }}</td>
@@ -27,6 +31,14 @@
                     <td>{{ p2 }}</td>
                     <td>{{ lh1 }}</td>
                     <td>{{ h1 }}</td>
+                    <td>{{ lh2 }}</td>
+                    <td>{{ h2 }}</td>
+                    <td>{{ lh3 }}</td>
+                    <td>{{ h3 }}</td>
+                    <td>{{ lp3 }}</td>
+                    <td>{{ p3 }}</td>
+                    <td>{{ lh4 }}</td>
+                    <td>{{ h4 }}</td>
                     <td>{{ ldr }}</td>
                 </tr>
             {% endfor %}

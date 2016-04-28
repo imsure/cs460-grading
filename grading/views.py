@@ -68,6 +68,15 @@ def show_students(request):
     prog2_ldays = []
     hw1_score = []
     hw1_ldays = []
+    hw2_score = []
+    hw2_ldays = []
+    hw3_score = []
+    hw3_ldays = []
+    prog3_score = []
+    prog3_ldays = []
+    hw4_score = []
+    hw4_ldays = []
+
     for s in students:
         (score_p1, ldays_p1) = get_student_score_ldays(s.netID, 'Prog1')
         prog1_score.append(score_p1)
@@ -78,9 +87,28 @@ def show_students(request):
         (score_h1, ldays_h1) = get_student_score_ldays(s.netID, 'HW1')
         hw1_score.append(score_h1)
         hw1_ldays.append(ldays_h1)
+        (score_h2, ldays_h2) = get_student_score_ldays(s.netID, 'HW2')
+        hw2_score.append(score_h2)
+        hw2_ldays.append(ldays_h2)
+        (score_h3, ldays_h3) = get_student_score_ldays(s.netID, 'HW3')
+        hw3_score.append(score_h3)
+        hw3_ldays.append(ldays_h3)
+        (score_p3, ldays_p3) = get_student_score_ldays(s.netID, 'Prog3')
+        prog3_score.append(score_p3)
+        prog3_ldays.append(ldays_p3)
+        (score_h4, ldays_h4) = get_student_score_ldays(s.netID, 'HW4')
+        hw4_score.append(score_h4)
+        hw4_ldays.append(ldays_h4)
+
+
+
         # remaining_latedays = compute_remaining_ldays('Prog1', s.netID)
         # remaining_latedays = compute_remaining_ldays('Prog2', s.netID)
-        remaining_latedays = compute_remaining_ldays('HW1', s.netID)
+        # remaining_latedays = compute_remaining_ldays('HW1', s.netID)
+        # remaining_latedays = compute_remaining_ldays('HW2', s.netID)
+        # remaining_latedays = compute_remaining_ldays('HW3', s.netID)
+        # remaining_latedays = compute_remaining_ldays('Prog3', s.netID)
+        remaining_latedays = compute_remaining_ldays('HW4', s.netID)
         if remaining_latedays < 0:
             ldays_remaining.append(0)
         else:
@@ -91,6 +119,10 @@ def show_students(request):
                              prog1_ldays, prog1_score,
                              prog2_ldays, prog2_score,
                              hw1_ldays, hw1_score,
+                             hw2_ldays, hw2_score,
+                             hw3_ldays, hw3_score,
+                             prog3_ldays, prog3_score,
+                             hw4_ldays, hw4_score,
                              ldays_remaining)),
     }
     return render(request, 'grading/show_students.html', context)
@@ -118,7 +150,7 @@ def remove_assign(request, assign_name):
 
 # initialize grading table for an assignment
 def init_grade_table(request, assign_name):
-    month_map = {'Jan': 1, 'Feb': 2}
+    month_map = {'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4}
 
     counter = 0
     turnin = open(path2turnin_file.format(assign_name))
@@ -236,12 +268,154 @@ def compute_remaining_ldays(assign_name, netID):
         except ObjectDoesNotExist:
             pass
 
+    if assign_name == 'HW2':
+        try:
+            prog1_entry = Grade.objects.get(assigName='Prog1', netID=netID)
+            remaining_ldays = 5 - prog1_entry.latedays
+        except ObjectDoesNotExist:
+            remaining_ldays = 5
+
+        try:
+            prog2_entry = Grade.objects.get(assigName='Prog2', netID=netID)
+            remaining_ldays -= prog2_entry.latedays
+        except ObjectDoesNotExist:
+            pass
+
+        try:
+            hw1_entry = Grade.objects.get(assigName='HW1', netID=netID)
+            remaining_ldays -= hw1_entry.latedays
+        except ObjectDoesNotExist:
+            pass
+
+        try:
+            hw2_entry = Grade.objects.get(assigName='HW2', netID=netID)
+            remaining_ldays -= hw2_entry.latedays
+        except ObjectDoesNotExist:
+            pass
+
+    if assign_name == 'HW3':
+        try:
+            prog1_entry = Grade.objects.get(assigName='Prog1', netID=netID)
+            remaining_ldays = 5 - prog1_entry.latedays
+        except ObjectDoesNotExist:
+            remaining_ldays = 5
+
+        try:
+            prog2_entry = Grade.objects.get(assigName='Prog2', netID=netID)
+            remaining_ldays -= prog2_entry.latedays
+        except ObjectDoesNotExist:
+            pass
+
+        try:
+            hw1_entry = Grade.objects.get(assigName='HW1', netID=netID)
+            remaining_ldays -= hw1_entry.latedays
+        except ObjectDoesNotExist:
+            pass
+
+        try:
+            hw2_entry = Grade.objects.get(assigName='HW2', netID=netID)
+            remaining_ldays -= hw2_entry.latedays
+        except ObjectDoesNotExist:
+            pass
+
+        try:
+            hw3_entry = Grade.objects.get(assigName='HW3', netID=netID)
+            remaining_ldays -= hw3_entry.latedays
+        except ObjectDoesNotExist:
+            pass
+
+    if assign_name == 'Prog3':
+        try:
+            prog1_entry = Grade.objects.get(assigName='Prog1', netID=netID)
+            remaining_ldays = 5 - prog1_entry.latedays
+        except ObjectDoesNotExist:
+            remaining_ldays = 5
+
+        try:
+            prog2_entry = Grade.objects.get(assigName='Prog2', netID=netID)
+            remaining_ldays -= prog2_entry.latedays
+        except ObjectDoesNotExist:
+            pass
+
+        try:
+            hw1_entry = Grade.objects.get(assigName='HW1', netID=netID)
+            remaining_ldays -= hw1_entry.latedays
+        except ObjectDoesNotExist:
+            pass
+
+        try:
+            hw2_entry = Grade.objects.get(assigName='HW2', netID=netID)
+            remaining_ldays -= hw2_entry.latedays
+        except ObjectDoesNotExist:
+            pass
+
+        try:
+            hw3_entry = Grade.objects.get(assigName='HW3', netID=netID)
+            remaining_ldays -= hw3_entry.latedays
+        except ObjectDoesNotExist:
+            pass
+
+        try:
+            prog3_entry = Grade.objects.get(assigName='Prog3', netID=netID)
+            remaining_ldays -= prog3_entry.latedays
+        except ObjectDoesNotExist:
+            pass
+
+    if assign_name == 'HW4':
+        try:
+            prog1_entry = Grade.objects.get(assigName='Prog1', netID=netID)
+            remaining_ldays = 5 - prog1_entry.latedays
+        except ObjectDoesNotExist:
+            remaining_ldays = 5
+
+        try:
+            prog2_entry = Grade.objects.get(assigName='Prog2', netID=netID)
+            remaining_ldays -= prog2_entry.latedays
+        except ObjectDoesNotExist:
+            pass
+
+        try:
+            hw1_entry = Grade.objects.get(assigName='HW1', netID=netID)
+            remaining_ldays -= hw1_entry.latedays
+        except ObjectDoesNotExist:
+            pass
+
+        try:
+            hw2_entry = Grade.objects.get(assigName='HW2', netID=netID)
+            remaining_ldays -= hw2_entry.latedays
+        except ObjectDoesNotExist:
+            pass
+
+        try:
+            hw3_entry = Grade.objects.get(assigName='HW3', netID=netID)
+            remaining_ldays -= hw3_entry.latedays
+        except ObjectDoesNotExist:
+            pass
+
+        try:
+            prog3_entry = Grade.objects.get(assigName='Prog3', netID=netID)
+            remaining_ldays -= prog3_entry.latedays
+        except ObjectDoesNotExist:
+            pass
+
+        try:
+            hw4_entry = Grade.objects.get(assigName='HW4', netID=netID)
+            remaining_ldays -= hw4_entry.latedays
+        except ObjectDoesNotExist:
+            pass
+
+
     return remaining_ldays
 
 def compute_grades(request, assign_name):
     turnins = Grade.objects.filter(assigName=assign_name)
     assign = Assignment.objects.get(pk=assign_name)
     for i in range(0, len(turnins)):
+        if turnins[i].deduction == -1:
+            turnins[i].score = -1
+            turnins[i].save()
+            continue
+
         remaining_latedays = compute_remaining_ldays(assign_name, turnins[i].netID_id)
         if remaining_latedays >= 0 or turnins[i].latedays == 0: # no penalty
             turnins[i].score = assign.total - turnins[i].deduction
